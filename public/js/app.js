@@ -30,6 +30,7 @@ const directionArrow = document.getElementById('direction-arrow');
 const btnUno = document.getElementById('btn-uno');
 const btnCatch = document.getElementById('btn-catch');
 const stackIndicator = document.getElementById('stack-indicator');
+const colorPill = document.getElementById('color-pill');
 
 // Lobby/Rules New Elements
 const btnShowRules = document.getElementById('btn-show-rules');
@@ -231,6 +232,13 @@ socket.on('game-update', (state) => {
     const activePlayer = state.players[state.turnIndex];
     if (state.status === 'playing' && !isMyTurn) {
         // You can add more specific action detections here
+    }
+    // Update Color Pillar
+    if (state.currentColor && colorPill) {
+        colorPill.style.backgroundColor = `var(--uno-${state.currentColor})`;
+        colorPill.classList.remove('hidden');
+    } else if (colorPill) {
+        colorPill.classList.add('hidden');
     }
 });
 

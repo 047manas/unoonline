@@ -376,6 +376,15 @@ input:focus {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+.color-pill {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
 #turn-text {
     font-weight: 600;
     font-size: 1rem;
