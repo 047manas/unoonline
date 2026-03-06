@@ -7,6 +7,10 @@ const Room = require('./room');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
+    connectTimeout: 10000,
+    pingTimeout: 5000,
+    pingInterval: 10000,
+    transports: ['websocket'],
     cors: {
         origin: "*"
     }
