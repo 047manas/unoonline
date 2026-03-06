@@ -265,6 +265,15 @@ function renderHand(hand, state) {
                 // Reset drop zone style in case dragleave didn't fire
                 discardPileContainer.style.transform = '';
             });
+        } else {
+            cardEl.addEventListener('click', () => {
+                if (isMyTurn) {
+                    showToast("Invalid move! You must match the color or value.");
+                    playSound(200, 'square', 0.2);
+                    cardEl.classList.add('shake');
+                    setTimeout(() => cardEl.classList.remove('shake'), 400);
+                }
+            });
         }
 
         playerHand.appendChild(cardEl);

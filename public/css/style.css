@@ -745,3 +745,34 @@ input:focus {
         opacity: 0;
     }
 }
+
+/* Invalid / Unplayable Card Enhancements */
+#player-hand .uno-card:not(.playable) {
+    filter: brightness(0.7) grayscale(0.2);
+    cursor: not-allowed;
+    transform: translateY(5px);
+}
+
+.shake {
+    animation: shakeAnim 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes shakeAnim {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    15%,
+    45%,
+    75% {
+        transform: translateX(-6px);
+    }
+
+    30%,
+    60%,
+    90% {
+        transform: translateX(6px);
+    }
+}
