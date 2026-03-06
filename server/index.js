@@ -144,6 +144,36 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('reconnect-player', ({ playerId, roomId, name }, callback) => {
+        console.log(`[RECONNECT-ATTEMPT] Player: ${name}, Room: ${roomId}, ID: ${playerId}`);
+        const room = rooms.get(roomId);
+        if (!room) {
+            console.log(`[RECONNECT-FAILED] Room ${roomId} not found`);
+            return callback({ success: false, error: 'Room not found' });
+        }
+
+        const player = room.players.find(p => p.id === playerId);
+        if (!player) {
+            console.log(`[RECONNECT-FAILED] Player ${playerId} not found in room ${roomId}`);
+            return callback({ success: false, error: 'Player not found' });
+        }
+
+        // Update socket ID
+        player.socketId = socket.id;
+        socketToPlayerMap.set(socket.id, { roomId, playerId: player.id, name: player.name });
+        socket.join(roomId);
+
+        console.log(`[RECONNECT-SUCCESS] Player ${player.name} reconnected to Room ${roomId}`);
+        callback({ success: true });
+
+        // Send full state update
+        if (room.status === 'playing') {
+            socket.emit('game-update', room.getState(player.id));
+        } else {
+            io.to(roomId).emit('room-update', room.getState(null));
+        }
+    });
+
     socket.on('send-reaction', ({ emoji }) => {
         const user = socketToPlayerMap.get(socket.id);
         if (!user) return;

@@ -40,8 +40,9 @@ const reactionBtns = document.querySelectorAll('.reaction-btn');
 const floatingEmojisContainer = document.getElementById('floating-emojis');
 
 // State
-let myId = null;
-let currentRoomId = null;
+let myId = sessionStorage.getItem('uno_playerId');
+let currentRoomId = sessionStorage.getItem('uno_roomId');
+let myName = sessionStorage.getItem('uno_playerName');
 let isMyTurn = false;
 let pendingPlayCardIndex = null; // For wild cards
 
@@ -85,6 +86,10 @@ btnCreateRoom.addEventListener('click', () => {
         if (res.success) {
             myId = res.playerId;
             currentRoomId = res.roomId;
+            myName = name;
+            sessionStorage.setItem('uno_playerId', myId);
+            sessionStorage.setItem('uno_roomId', currentRoomId);
+            sessionStorage.setItem('uno_playerName', myName);
             lobbyRoomCode.innerText = res.roomId;
             switchScreen(lobbyScreen);
         } else {
@@ -102,6 +107,10 @@ btnJoinRoom.addEventListener('click', () => {
         if (res.success) {
             myId = res.playerId;
             currentRoomId = res.roomId;
+            myName = name;
+            sessionStorage.setItem('uno_playerId', myId);
+            sessionStorage.setItem('uno_roomId', currentRoomId);
+            sessionStorage.setItem('uno_playerName', myName);
             lobbyRoomCode.innerText = res.roomId;
             switchScreen(lobbyScreen);
         } else {
@@ -109,6 +118,20 @@ btnJoinRoom.addEventListener('click', () => {
         }
     });
 });
+
+// Reconnect logic
+if (myId && currentRoomId) {
+    socket.emit('reconnect-player', { playerId: myId, roomId: currentRoomId, name: myName }, (res) => {
+        if (res.success) {
+            console.log('Reconnected to room:', currentRoomId);
+        } else {
+            // If failed (room gone), clear session
+            sessionStorage.clear();
+            myId = null;
+            currentRoomId = null;
+        }
+    });
+}
 
 socket.on('room-update', (state) => {
     if (state.status === 'playing') return; // Handled by game-update
@@ -274,6 +297,9 @@ function renderHand(hand, state) {
                     playSound(200, 'square', 0.2);
                     cardEl.classList.add('shake');
                     setTimeout(() => cardEl.classList.remove('shake'), 400);
+                } else {
+                    showToast("Wait for your turn!");
+                    playSound(150, 'sine', 0.1);
                 }
             });
         }

@@ -27,8 +27,11 @@ body {
     background-color: var(--bg-dark);
     color: var(--text-main);
     min-height: 100vh;
+    height: 100vh;
     overflow: hidden;
     background-image: radial-gradient(circle at 50% -20%, #1e1b4b, var(--bg-dark) 60%);
+    position: fixed;
+    width: 100%;
 }
 
 #app {
@@ -232,9 +235,10 @@ input:focus {
     display: flex;
     justify-content: center;
     gap: 1rem;
-    padding: 0 1rem;
+    padding: 0.5rem 1rem;
     overflow-x: auto;
     align-items: flex-start;
+    -webkit-overflow-scrolling: touch;
 }
 
 .opponent-box {
@@ -250,8 +254,9 @@ input:focus {
 
 .opponent-box.active-turn {
     border-color: var(--primary);
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-    background: rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+    background: rgba(99, 102, 241, 0.2);
+    transform: scale(1.05);
 }
 
 .opponent-name {
@@ -291,8 +296,8 @@ input:focus {
 
 .deck-container {
     display: flex;
-    gap: 2rem;
-    margin-bottom: 2rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .turn-indicator {
@@ -333,12 +338,23 @@ input:focus {
 .hand-container {
     display: flex;
     justify-content: center;
-    width: 100vw;
-    height: 160px;
-    padding: 0 2rem;
+    width: 100%;
+    height: 180px;
+    padding: 0 1rem;
     overflow-x: auto;
     overflow-y: hidden;
     align-items: flex-end;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+.hand-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.hand-container::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 2px;
 }
 
 /* Modal */
@@ -619,15 +635,69 @@ input:focus {
 
 /* Mobile */
 @media (max-width: 768px) {
+    .logo {
+        font-size: 3rem;
+    }
+
+    .glass-panel {
+        padding: 1.5rem;
+        width: 90%;
+    }
+
     .uno-card {
-        width: 70px;
-        height: 105px;
+        width: 80px;
+        height: 120px;
         border-width: 3px;
-        margin-left: -35px !important;
+        margin-left: -45px !important;
     }
 
     .deck-container .uno-card {
         margin: 0 !important;
+    }
+
+    .uno-card .ellipse {
+        width: 65px;
+        height: 95px;
+    }
+
+    .uno-card .center-val {
+        font-size: 2.25rem;
+    }
+
+    .uno-card .corner-val {
+        font-size: 1.1rem;
+    }
+
+    .hand-container {
+        height: 140px;
+        padding-bottom: 5px;
+    }
+
+    #discard-pile-container {
+        width: 80px;
+        height: 120px;
+    }
+
+    .deck-container {
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .turn-text {
+        font-size: 1.1rem;
+    }
+
+    .btn.danger {
+        padding: 0.5rem 1.5rem;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .uno-card {
+        width: 70px;
+        height: 105px;
+        margin-left: -40px !important;
     }
 
     .uno-card .ellipse {
@@ -636,16 +706,7 @@ input:focus {
     }
 
     .uno-card .center-val {
-        font-size: 2rem;
-    }
-
-    .uno-card .corner-val {
-        font-size: 1rem;
-    }
-
-    .hand-container {
-        height: 120px;
-        padding: 0 1rem;
+        font-size: 1.75rem;
     }
 
     #discard-pile-container {
