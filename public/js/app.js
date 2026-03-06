@@ -224,7 +224,7 @@ function renderHand(hand, state) {
         const cardEl = tempDiv.firstChild;
 
         if (playable) {
-            cardEl.addEventListener('click', () => handleCardClick(card, index));
+            cardEl.addEventListener('click', () => handleCardClick(card, index, cardEl));
         }
 
         playerHand.appendChild(cardEl);
@@ -233,13 +233,19 @@ function renderHand(hand, state) {
     // Spread cards manually a bit if needed, css handles margin-left
 }
 
-function handleCardClick(card, index) {
+function handleCardClick(card, index, cardEl) {
     if (!isMyTurn) return;
 
     if (card.type === 'wild' || card.value === 'wildDraw4') {
         pendingPlayCardIndex = index;
         colorPickerModal.classList.remove('hidden');
     } else {
+        // Visual feedback immediately
+        if (cardEl) {
+            cardEl.style.transform = 'translateY(-100px) scale(0.5)';
+            cardEl.style.opacity = '0';
+        }
+
         socket.emit('play-card', { cardIndex: index });
         playSound(600, 'sine', 0.1);
     }
@@ -247,6 +253,10 @@ function handleCardClick(card, index) {
 
 drawPile.addEventListener('click', () => {
     if (isMyTurn) {
+        // Immediate visual scale
+        drawPile.style.transform = 'scale(0.9)';
+        setTimeout(() => drawPile.style.transform = '', 150);
+
         socket.emit('draw-card');
         playSound(800, 'sine', 0.1);
     }
