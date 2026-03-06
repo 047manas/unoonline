@@ -565,6 +565,7 @@ input:focus {
     position: relative;
     width: 100px;
     height: 150px;
+    transition: transform 0.2s ease-out;
 }
 
 #discard-pile-container .uno-card {

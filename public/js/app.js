@@ -203,6 +203,32 @@ function renderCenter(state) {
     if (state.currentColor) {
         drawPile.style.boxShadow = `0 0 20px var(--uno-${state.currentColor})`;
     }
+
+    // Set up drop zone
+    discardPileContainer.addEventListener('dragover', (e) => {
+        e.preventDefault(); // Necessary to allow dropping
+        discardPileContainer.style.transform = 'scale(1.1)';
+    });
+
+    discardPileContainer.addEventListener('dragleave', () => {
+        discardPileContainer.style.transform = '';
+    });
+
+    discardPileContainer.addEventListener('drop', (e) => {
+        e.preventDefault();
+        discardPileContainer.style.transform = '';
+        const indexStr = e.dataTransfer.getData('text/plain');
+        if (indexStr !== '') {
+            const index = parseInt(indexStr);
+            const cardEl = document.querySelector(`.uno-card[data-index="${index}"]`);
+
+            // Re-use click logic for validation and visual feedback
+            const myPlayer = state.players.find(p => p.id === myId);
+            if (myPlayer && myPlayer.hand[index]) {
+                handleCardClick(myPlayer.hand[index], index, cardEl);
+            }
+        }
+    });
 }
 
 function renderHand(hand, state) {
@@ -224,7 +250,21 @@ function renderHand(hand, state) {
         const cardEl = tempDiv.firstChild;
 
         if (playable) {
+            // Click to play
             cardEl.addEventListener('click', () => handleCardClick(card, index, cardEl));
+
+            // Drag to play
+            cardEl.setAttribute('draggable', 'true');
+            cardEl.setAttribute('data-index', index);
+            cardEl.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', index.toString());
+                cardEl.style.opacity = '0.5';
+            });
+            cardEl.addEventListener('dragend', () => {
+                cardEl.style.opacity = '1';
+                // Reset drop zone style in case dragleave didn't fire
+                discardPileContainer.style.transform = '';
+            });
         }
 
         playerHand.appendChild(cardEl);
