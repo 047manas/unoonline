@@ -114,12 +114,16 @@ io.on('connection', (socket) => {
         if (!room) return;
 
         const player = room.players.find(p => p.id === user.playerId);
-        if (player && player.hand.length <= 2) {
-            player.unoCalled = true;
-            io.to(user.roomId).emit('notification', { message: `${player.name} called UNO!` });
-            room.players.forEach(p => {
-                io.to(p.socketId).emit('game-update', room.getState(p.id));
-            });
+        if (player) {
+            if (player.hand.length <= 2) {
+                player.unoCalled = true;
+                io.to(user.roomId).emit('notification', { message: `${player.name} called UNO!` });
+                room.players.forEach(p => {
+                    io.to(p.socketId).emit('game-update', room.getState(p.id));
+                });
+            } else {
+                socket.emit('game-error', 'You can only call UNO when you have 2 or fewer cards!');
+            }
         }
     });
 
