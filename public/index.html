@@ -49,40 +49,57 @@
 
         <!-- Screen 3: Game Board -->
         <div id="game-screen" class="screen">
-            <!-- Opponents -->
-            <div id="opponents-container" class="opponents-container"></div>
+            <div id="game-board" class="game-grid">
+                <!-- Top: Opponents -->
+                <header class="game-header">
+                    <div id="opponents-container" class="opponents-flex"></div>
+                </header>
 
-            <!-- Game Center -->
-            <div class="game-center">
-                <div class="deck-container">
-                    <div id="draw-pile" class="uno-card card-back">
-                        <div class="ellipse"><span class="uno-text">UNO</span></div>
-                        <div id="stack-indicator" class="stack-badge hidden">+0</div>
+                <!-- Middle: Table -->
+                <main class="game-table">
+                    <div class="deck-area">
+                        <div id="draw-pile" class="uno-card card-back">
+                            <div class="ellipse"><span class="uno-text">UNO</span></div>
+                            <div id="stack-indicator" class="stack-badge hidden">+0</div>
+                        </div>
+                        <div id="discard-pile-container">
+                            <!-- Discard pile injected here -->
+                        </div>
                     </div>
-                    <div id="discard-pile-container">
-                        <!-- Discard pile injected here -->
-                    </div>
-                </div>
 
-                <div class="turn-indicator">
-                    <div id="action-notification" class="action-bubble hidden">... is choosing a color</div>
-                    <span id="turn-text">Waiting...</span>
-                    <div id="direction-arrow" class="arrow clockwise">↻</div>
-                </div>
+                    <div class="table-info">
+                        <div id="action-notification" class="action-bubble hidden">... is choosing a color</div>
+                        <div class="status-glass">
+                            <span id="turn-text">Waiting...</span>
+                            <div id="direction-arrow" class="arrow clockwise">↻</div>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- Bottom: Player Area -->
+                <footer class="game-footer">
+                    <div class="player-controls">
+                        <button id="btn-uno" class="btn danger">UNO!</button>
+                        <button id="btn-catch" class="btn secondary">Report!</button>
+                    </div>
+                    <div id="player-hand" class="hand-container">
+                        <!-- Cards injected here -->
+                    </div>
+                </footer>
+
+                <!-- Side: Reactions -->
+                <aside class="game-side">
+                    <div class="reaction-bar glass-panel">
+                        <button class="reaction-btn" data-emoji="😂">😂</button>
+                        <button class="reaction-btn" data-emoji="😭">😭</button>
+                        <button class="reaction-btn" data-emoji="😡">😡</button>
+                        <button class="reaction-btn" data-emoji="🔥">🔥</button>
+                        <button class="reaction-btn" data-emoji="🤯">🤯</button>
+                    </div>
+                </aside>
             </div>
 
-            <!-- Player Area -->
-            <div class="player-area">
-                <div class="player-controls">
-                    <button id="btn-uno" class="btn danger">UNO!</button>
-                    <button id="btn-catch" class="btn secondary">Report!</button>
-                </div>
-                <div id="player-hand" class="hand-container">
-                    <!-- Cards injected here -->
-                </div>
-            </div>
-
-            <!-- Color Picker Modal -->
+            <!-- Modals & Overlays -->
             <div id="color-picker-modal" class="modal hidden">
                 <div class="modal-content glass-panel">
                     <h3>Choose Color</h3>
@@ -95,25 +112,14 @@
                 </div>
             </div>
 
-            <!-- Game Over Modal -->
             <div id="game-over-modal" class="modal hidden">
                 <div class="modal-content glass-panel">
-                    <h2 id="winner-text">Someone won!</h2>
+                    <h2 id="winner-text">Someone won! 🎉</h2>
                     <br>
                     <button id="btn-play-again" class="btn primary">Back to Menu</button>
                 </div>
             </div>
 
-            <!-- Reaction Bar -->
-            <div class="reaction-bar glass-panel">
-                <button class="reaction-btn" data-emoji="😂">😂</button>
-                <button class="reaction-btn" data-emoji="😭">😭</button>
-                <button class="reaction-btn" data-emoji="😡">😡</button>
-                <button class="reaction-btn" data-emoji="🔥">🔥</button>
-                <button class="reaction-btn" data-emoji="🤯">🤯</button>
-            </div>
-
-            <!-- Floating Emojis Container -->
             <div id="floating-emojis"></div>
         </div>
 

@@ -237,7 +237,7 @@ socket.on('game-update', (state) => {
 function renderOpponents(players, turnIndex) {
     opponentsContainer.innerHTML = '';
     players.forEach((p, idx) => {
-        if (p.id === myId) return; // Note: doesn't show self in top row
+        if (p.id === myId) return;
 
         const box = document.createElement('div');
         box.className = `opponent-box ${idx === turnIndex ? 'active-turn' : ''}`;
@@ -246,7 +246,7 @@ function renderOpponents(players, turnIndex) {
         box.innerHTML = `
             ${p.unoCalled ? '<div class="uno-warning">UNO!</div>' : ''}
             <div class="opponent-name">${p.name}</div>
-            <div class="opponent-cards">🂠 ${p.handCount}</div>
+            <div class="opponent-cards">🎴 ${p.handCount}</div>
         `;
         opponentsContainer.appendChild(box);
     });
@@ -273,14 +273,13 @@ function renderCenter(state) {
 
 function renderHand(hand, state) {
     playerHand.innerHTML = '';
+    const totalCards = hand.length;
 
     hand.forEach((card, index) => {
-        // Determine if playable
         const topCard = state.topCard;
         let playable = false;
 
         if (isMyTurn && topCard) {
-            // Match server-side validation exactly
             if (card.type === 'wild' || card.value === 'wildDraw4') {
                 playable = true;
             } else if (card.color === state.currentColor || card.value === topCard.value) {
@@ -293,33 +292,44 @@ function renderHand(hand, state) {
         tempDiv.innerHTML = cardHtml.trim();
         const cardEl = tempDiv.firstChild;
 
-        // Fan effect
-        const totalCards = hand.length;
+        // --- Premium Mobile Card Fanning Physics ---
         const middle = (totalCards - 1) / 2;
         const offset = index - middle;
-        const rotation = offset * (totalCards > 10 ? 2 : 4);
-        const yOffset = Math.abs(offset) * 2;
 
-        cardEl.style.transform = `rotate(${rotation}deg) translateY(${yOffset}px)`;
+        // Dynamic spreading based on card count
+        let spread = 60;
+        if (totalCards > 5) spread = 40;
+        if (totalCards > 10) spread = 30;
+        if (totalCards > 15) spread = 20;
+
+        const rotation = offset * (totalCards > 10 ? 3 : 5);
+        const yOffset = Math.abs(offset) * (totalCards > 10 ? 2 : 5);
+        const xOffset = offset * spread;
+
+        cardEl.style.transform = `translateX(${xOffset}px) translateY(${yOffset}px) rotate(${rotation}deg)`;
+        cardEl.style.zIndex = index;
+
         if (!playable) {
-            cardEl.style.filter = 'brightness(0.7) grayscale(0.3)';
+            cardEl.style.filter = 'brightness(0.7) grayscale(0.2)';
+            cardEl.style.opacity = '0.9';
         }
 
-        if (playable) {
-            cardEl.addEventListener('click', () => handleCardClick(card, index, cardEl));
-        } else {
-            cardEl.addEventListener('click', () => {
+        // Interaction
+        cardEl.addEventListener('click', () => {
+            if (playable) {
+                handleCardClick(card, index, cardEl);
+            } else {
                 if (isMyTurn) {
-                    showToast(`Invalid move! Matches color ${state.currentColor} or value ${topCard.value}`);
-                    playSound(200, 'square', 0.2);
-                    cardEl.classList.add('shake');
-                    setTimeout(() => cardEl.classList.remove('shake'), 400);
+                    showToast(`Invalid move! Match ${state.currentColor} or ${topCard.value}`);
+                    playSound(200, 'square', 0.15);
                 } else {
                     showToast("Wait for your turn!");
                     playSound(150, 'sine', 0.1);
                 }
-            });
-        }
+                cardEl.classList.add('shake');
+                setTimeout(() => cardEl.classList.remove('shake'), 400);
+            }
+        });
 
         playerHand.appendChild(cardEl);
     });
