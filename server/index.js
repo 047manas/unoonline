@@ -29,6 +29,7 @@ io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     socket.on('create-room', ({ name }, callback) => {
+        console.log(`[CREATE-ROOM] Player: ${name}, Socket: ${socket.id}`);
         const roomId = generateRoomCode();
         const room = new Room(roomId);
         rooms.set(roomId, room);
@@ -37,20 +38,32 @@ io.on('connection', (socket) => {
         socketToPlayerMap.set(socket.id, { roomId, playerId: player.id, name });
 
         socket.join(roomId);
+        console.log(`[ROOM-CREATED] ID: ${roomId}, Player: ${name} (${player.id})`);
         callback({ success: true, roomId, playerId: player.id });
-        io.to(roomId).emit('room-update', room.getState(null)); // null to avoid leaking hand
+        io.to(roomId).emit('room-update', room.getState(null));
     });
 
     socket.on('join-room', ({ name, roomId }, callback) => {
+        console.log(`[JOIN-ROOM] Player: ${name}, Room: ${roomId}, Socket: ${socket.id}`);
         const room = rooms.get(roomId);
-        if (!room) return callback({ error: 'Room not found' });
-        if (room.status !== 'waiting') return callback({ error: 'Game already started' });
-        if (room.players.length >= 10) return callback({ error: 'Room is full' });
+        if (!room) {
+            console.log(`[JOIN-FAILED] Room ${roomId} not found`);
+            return callback({ error: 'Room not found' });
+        }
+        if (room.status !== 'waiting') {
+            console.log(`[JOIN-FAILED] Game already started in Room ${roomId}`);
+            return callback({ error: 'Game already started' });
+        }
+        if (room.players.length >= 10) {
+            console.log(`[JOIN-FAILED] Room ${roomId} is full`);
+            return callback({ error: 'Room is full' });
+        }
 
         const player = room.addPlayer(socket.id, name);
         socketToPlayerMap.set(socket.id, { roomId, playerId: player.id, name });
 
         socket.join(roomId);
+        console.log(`[JOIN-SUCCESS] Player ${name} joined Room ${roomId}`);
         callback({ success: true, roomId, playerId: player.id });
         io.to(roomId).emit('room-update', room.getState(null));
     });
