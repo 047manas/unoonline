@@ -29,13 +29,15 @@
                         <button id="btn-join-room" class="btn secondary">Join</button>
                     </div>
                 </div>
+                <button id="btn-show-rules" class="btn ghost mt-4">How to Play</button>
             </div>
         </div>
 
         <!-- Screen 2: Lobby -->
         <div id="lobby-screen" class="screen">
             <div class="card glass-panel lobby-panel">
-                <h2>Room: <span id="lobby-room-code" class="highlight"></span></h2>
+                <h2>Room: <span id="lobby-room-code" class="highlight"></span> <button id="btn-copy-code"
+                        class="btn-icon" title="Copy Code">📋</button></h2>
                 <p>Waiting for players...</p>
                 <ul id="player-list" class="player-list">
                     <!-- Players will be injected here -->
@@ -63,6 +65,7 @@
                 </div>
 
                 <div class="turn-indicator">
+                    <div id="action-notification" class="action-bubble hidden">... is choosing a color</div>
                     <span id="turn-text">Waiting...</span>
                     <div id="direction-arrow" class="arrow clockwise">↻</div>
                 </div>
@@ -112,6 +115,40 @@
 
             <!-- Floating Emojis Container -->
             <div id="floating-emojis"></div>
+        </div>
+
+        <!-- Instructions Modal -->
+        <div id="rules-modal" class="modal hidden">
+            <div class="modal-content glass-panel rules-content">
+                <button class="close-modal">&times;</button>
+                <h2>How to Play UNO!</h2>
+                <div class="rules-scroll">
+                    <ul>
+                        <li><strong>Match Cards:</strong> Match by color or number/symbol.</li>
+                        <li><strong>Action Cards:</strong>
+                            <ul>
+                                <li><strong>Skip:</strong> Next player loses turn.</li>
+                                <li><strong>Reverse:</strong> Changes play direction.</li>
+                                <li><strong>Draw Two (+2):</strong> Next player draws 2 cards (Stackable!).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Wild Cards:</strong>
+                            <ul>
+                                <li><strong>Wild Card:</strong> Choose the next color.</li>
+                                <li><strong>Wild Draw 4 (+4):</strong> Change color and next player draws 4
+                                    (Stackable!).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Stacking:</strong> You can play a +2 on a +2 (or +4 on a +4) to pass the penalty!
+                        </li>
+                        <li><strong>Calling UNO:</strong> Press the <strong>UNO!</strong> button when you have 1 card
+                            left.</li>
+                        <li><strong>Catching Others:</strong> If someone forgets UNO, press <strong>Report!</strong> to
+                            penalize them!</li>
+                    </ul>
+                </div>
+                <button class="btn primary close-rules">Got it!</button>
+            </div>
         </div>
     </div>
 

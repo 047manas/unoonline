@@ -28,8 +28,16 @@ const playerHand = document.getElementById('player-hand');
 const turnText = document.getElementById('turn-text');
 const directionArrow = document.getElementById('direction-arrow');
 const btnUno = document.getElementById('btn-uno');
-const btnCatch = document.getElementById('btn-catch'); // New
-const stackIndicator = document.getElementById('stack-indicator'); // New
+const btnCatch = document.getElementById('btn-catch');
+const stackIndicator = document.getElementById('stack-indicator');
+
+// Lobby/Rules New Elements
+const btnShowRules = document.getElementById('btn-show-rules');
+const btnCopyCode = document.getElementById('btn-copy-code');
+const rulesModal = document.getElementById('rules-modal');
+const btnCloseRules = document.querySelector('.close-rules');
+const btnCloseRulesModal = document.querySelector('#rules-modal .close-modal');
+const actionNotification = document.getElementById('action-notification');
 
 // Modals
 const colorPickerModal = document.getElementById('color-picker-modal');
@@ -54,10 +62,13 @@ function playSound(freq, type = 'sine', duration = 0.1) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
+
     osc.type = type;
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     osc.start();
@@ -174,6 +185,22 @@ btnStartGame.addEventListener('click', () => {
     socket.emit('start-game');
 });
 
+// Rules & Copy Code Logic
+if (btnShowRules) btnShowRules.onclick = () => rulesModal.classList.add('active');
+if (btnCloseRules) btnCloseRules.onclick = () => rulesModal.classList.remove('active');
+if (btnCloseRulesModal) btnCloseRulesModal.onclick = () => rulesModal.classList.remove('active');
+
+if (btnCopyCode) {
+    btnCopyCode.onclick = () => {
+        const code = lobbyRoomCode.innerText;
+        navigator.clipboard.writeText(code).then(() => {
+            showToast("Room code copied!");
+            btnCopyCode.innerText = '✅';
+            setTimeout(() => btnCopyCode.innerText = '📋', 2000);
+        });
+    };
+}
+
 // --- Game Logic ---
 
 socket.on('game-update', (state) => {
@@ -199,6 +226,12 @@ socket.on('game-update', (state) => {
     else turnText.innerText = `${state.players[state.turnIndex].name}'s Turn`;
 
     directionArrow.className = `arrow ${state.direction === 1 ? 'clockwise' : 'counter-clockwise'}`;
+
+    // Handle Action Notifications
+    const activePlayer = state.players[state.turnIndex];
+    if (state.status === 'playing' && !isMyTurn) {
+        // You can add more specific action detections here
+    }
 });
 
 function renderOpponents(players, turnIndex) {
@@ -260,6 +293,18 @@ function renderHand(hand, state) {
         tempDiv.innerHTML = cardHtml.trim();
         const cardEl = tempDiv.firstChild;
 
+        // Fan effect
+        const totalCards = hand.length;
+        const middle = (totalCards - 1) / 2;
+        const offset = index - middle;
+        const rotation = offset * (totalCards > 10 ? 2 : 4);
+        const yOffset = Math.abs(offset) * 2;
+
+        cardEl.style.transform = `rotate(${rotation}deg) translateY(${yOffset}px)`;
+        if (!playable) {
+            cardEl.style.filter = 'brightness(0.7) grayscale(0.3)';
+        }
+
         if (playable) {
             cardEl.addEventListener('click', () => handleCardClick(card, index, cardEl));
         } else {
@@ -285,6 +330,7 @@ function handleCardClick(card, index, cardEl) {
 
     if (card.type === 'wild' || card.value === 'wildDraw4') {
         pendingPlayCardIndex = index;
+        colorPickerModal.classList.add('active'); // Use active class for glassmorphism modals
         colorPickerModal.classList.remove('hidden');
     } else {
         // Visual feedback immediately
@@ -336,11 +382,27 @@ socket.on('game-error', (err) => {
 });
 
 socket.on('game-over', ({ winner }) => {
-    winnerText.innerText = `${winner} won the game!`;
+    winnerText.innerText = `${winner} won the game! 🎉`;
+    gameOverModal.classList.add('active');
     gameOverModal.classList.remove('hidden');
     playSound(400, 'square', 0.5);
     setTimeout(() => playSound(600, 'square', 1), 600);
+
+    // Simple CSS Confetti if no external lib
+    showConfetti();
 });
+
+function showConfetti() {
+    for (let i = 0; i < 50; i++) {
+        const conf = document.createElement('div');
+        conf.className = 'confetti';
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.backgroundColor = ['#ef4444', '#3b82f6', '#22c55e', '#eab308'][Math.floor(Math.random() * 4)];
+        conf.style.animationDelay = Math.random() * 2 + 's';
+        document.body.appendChild(conf);
+        setTimeout(() => conf.remove(), 4000);
+    }
+}
 
 btnPlayAgain.addEventListener('click', () => {
     window.location.reload();
