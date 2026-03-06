@@ -53,6 +53,8 @@ class Room {
         if (this.players.length < 2) return false;
 
         this.deck = shuffle(createDeck());
+        console.log(`[GAME-START] Deck shuffled. First 5 cards:`, this.deck.slice(0, 5).map(c => `${c.color} ${c.value}`));
+
         this.discardPile = [];
         this.status = 'playing';
         this.direction = 1;

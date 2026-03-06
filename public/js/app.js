@@ -175,6 +175,8 @@ btnStartGame.addEventListener('click', () => {
 // --- Game Logic ---
 
 socket.on('game-update', (state) => {
+    const myPlayer = state.players.find(p => p.id === myId);
+    isMyTurn = myPlayer && myPlayer.isMyTurn;
     if (landingScreen.classList.contains('active') || lobbyScreen.classList.contains('active')) {
         switchScreen(gameScreen);
         playSound(440, 'triangle', 0.5); // Game start sound
@@ -183,10 +185,6 @@ socket.on('game-update', (state) => {
     renderOpponents(state.players, state.turnIndex);
     renderCenter(state);
     renderHand(state.myHand, state);
-
-    const myPlayer = state.players.find(p => p.id === myId);
-    isMyTurn = myPlayer && myPlayer.isMyTurn;
-
     if (isMyTurn) turnText.innerText = 'Your Turn!';
     else turnText.innerText = `${state.players[state.turnIndex].name}'s Turn`;
 
@@ -378,56 +376,52 @@ btnPlayAgain.addEventListener('click', () => {
 
 // --- Emoji Reactions Logic ---
 
-// Send reaction
-reactionBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const emoji = btn.dataset.emoji;
-        socket.emit('send-reaction', { emoji });
-
-        // Anti-spam: disable button briefly
-        btn.disabled = true;
-        setTimeout(() => { btn.disabled = false; }, 1000);
-    });
-});
-
-// Receive reaction
+// Receive emoji
 socket.on('show-reaction', ({ playerId, emoji }) => {
     const el = document.createElement('div');
     el.className = 'floating-emoji';
     el.innerText = emoji;
 
-    // Determine start position based on who sent it
+    // Determine start position
     if (playerId === myId) {
-        // Start from bottom center (player area)
-        el.style.left = `calc(50% + ${Math.random() * 40 - 20}px)`;
-        el.style.bottom = '150px';
+        el.style.left = '50%';
+        el.style.bottom = '100px';
     } else {
-        // Find opponent box
-        const opponentBox = document.getElementById(`opponent-${playerId}`);
-        if (opponentBox) {
-            const rect = opponentBox.getBoundingClientRect();
+        const opBox = document.getElementById(`opponent-${playerId}`);
+        if (opBox) {
+            const rect = opBox.getBoundingClientRect();
             el.style.left = `${rect.left + rect.width / 2}px`;
-            el.style.top = `${rect.top + 20}px`;
+            el.style.top = `${rect.top}px`;
         } else {
-            // Fallback to center screen
             el.style.left = '50%';
-            el.style.top = '30%';
+            el.style.top = '20%';
         }
     }
 
-    // Add slight random horizontal drift and rotation
-    const drift = Math.random() * 80 - 40;
-    const rot = Math.random() * 40 - 20;
-    el.style.left = `calc(${el.style.left || '50%'} + ${drift}px)`;
-    el.style.setProperty('--rot', `${rot}deg`);
+    // Add random drift
+    const drift = Math.random() * 60 - 30;
+    el.style.transform = `translateX(${drift}px)`;
+    el.style.setProperty('--rot', `${Math.random() * 40 - 20}deg`);
 
     floatingEmojisContainer.appendChild(el);
+    playSound(600 + Math.random() * 200, 'sine', 0.05);
 
-    // Play a subtle pop sound
-    playSound(700 + Math.random() * 200, 'sine', 0.05);
-
-    // Cleanup after animation (2s)
-    setTimeout(() => {
-        el.remove();
-    }, 2000);
+    setTimeout(() => el.remove(), 2500);
 });
+
+// Setup reactions (ensure elements exist)
+function initReactions() {
+    document.querySelectorAll('.reaction-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const emoji = btn.dataset.emoji;
+            socket.emit('send-reaction', { emoji });
+
+            // Visual feedback
+            btn.style.transform = 'scale(1.3)';
+            setTimeout(() => btn.style.transform = '', 200);
+        });
+    });
+}
+
+// Global init on load
+window.addEventListener('load', initReactions);

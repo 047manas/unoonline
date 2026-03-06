@@ -27,17 +27,21 @@ body {
     background-color: var(--bg-dark);
     color: var(--text-main);
     min-height: 100vh;
-    height: 100vh;
-    overflow: hidden;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
     background-image: radial-gradient(circle at 50% -20%, #1e1b4b, var(--bg-dark) 60%);
     position: fixed;
     width: 100%;
 }
 
 #app {
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     position: relative;
+    max-width: 100vw;
+    overflow-x: hidden;
 }
 
 .screen {
@@ -670,7 +674,9 @@ input:focus {
 
     .hand-container {
         height: 140px;
+        padding: 0 0.5rem;
         padding-bottom: 5px;
+        width: 100%;
     }
 
     #discard-pile-container {
