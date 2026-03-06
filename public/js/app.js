@@ -1,6 +1,4 @@
-const socket = io({
-    path: '/api/socket'
-});
+const socket = io();
 
 // DOM Elements
 const landingScreen = document.getElementById('landing-screen');
