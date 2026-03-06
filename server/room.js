@@ -12,6 +12,7 @@ class Room {
         this.direction = 1;
         this.turnIndex = 0;
         this.winner = null;
+        this.drawStack = 0;
     }
 
     addPlayer(socketId, name) {
@@ -37,11 +38,19 @@ class Room {
             }
             if (this.status === 'playing') {
                 this.deck.unshift(...player.hand);
-                if (index < this.turnIndex) {
-                    this.turnIndex--;
-                }
-                if (this.turnIndex >= this.players.length) {
-                    this.turnIndex = 0;
+
+                // If only 1 player left, they win
+                if (this.players.length === 1) {
+                    this.status = 'finished';
+                    this.winner = this.players[0];
+                    console.log(`[GAME-OVER] Only one player left: ${this.winner.name} wins by default.`);
+                } else {
+                    if (index < this.turnIndex) {
+                        this.turnIndex--;
+                    }
+                    if (this.turnIndex >= this.players.length) {
+                        this.turnIndex = 0;
+                    }
                 }
             }
             return player;
@@ -65,6 +74,8 @@ class Room {
             p.hand = this.deck.splice(0, 7);
             p.unoCalled = false;
         });
+
+        this.drawStack = 0; // Reset stack on start
 
         let firstCard = this.deck.shift();
         while (firstCard.value === 'wildDraw4') {
@@ -118,17 +129,11 @@ class Room {
         } else if (card.value === 'skip') {
             this.nextTurn();
         } else if (card.value === 'draw2') {
-            this.nextTurn();
-            if (this.players.length > 0) {
-                const targetPlayer = this.players[this.turnIndex];
-                targetPlayer.hand.push(...this.drawCards(2));
-            }
+            this.drawStack += 2;
+            // No nextTurn here, playCard handles it
         } else if (card.value === 'wildDraw4') {
-            this.nextTurn();
-            if (this.players.length > 0) {
-                const targetPlayer = this.players[this.turnIndex];
-                targetPlayer.hand.push(...this.drawCards(4));
-            }
+            this.drawStack += 4;
+            // No nextTurn here, playCard handles it
         }
     }
 
@@ -146,8 +151,16 @@ class Room {
 
         const topCard = this.discardPile[this.discardPile.length - 1];
 
-        if (!isValidPlay(card, topCard, this.currentColor)) {
-            return { error: 'Invalid play' };
+        // Stacking rules
+        if (this.drawStack > 0) {
+            // Must play same type of card to stack
+            if (card.value !== topCard.value) {
+                return { error: `You must stack a ${topCard.value} or draw ${this.drawStack} cards!` };
+            }
+        } else {
+            if (!isValidPlay(card, topCard, this.currentColor)) {
+                return { error: 'Invalid play' };
+            }
         }
 
         player.hand.splice(cardIndex, 1);
@@ -185,14 +198,40 @@ class Room {
         }
 
         const player = this.players[playerIndex];
-        const drawn = this.drawCards(1);
+
+        let drawAmount = 1;
+        let penaltySkip = false;
+
+        if (this.drawStack > 0) {
+            drawAmount = this.drawStack;
+            this.drawStack = 0;
+            penaltySkip = true;
+        }
+
+        const drawn = this.drawCards(drawAmount);
         if (drawn.length > 0) {
             player.hand.push(...drawn);
             player.unoCalled = false;
         }
 
         this.nextTurn();
+        // If they drew a stack, they are skipped
+        // Actually nextTurn() already skip them if we move it here?
+        // Wait, if it was their turn and they draw, nextTurn moves it to the next person.
+        // Usually in UNO if you draw 1 you can still play it if it matches.
+        // But if you draw a STACK, your turn is definitely over.
         return { success: true, drawn };
+    }
+
+    catchUno(catcherId) {
+        // Find players with 1 card who haven't called UNO
+        const vulnerablePlayer = this.players.find(p => p.hand.length === 1 && !p.unoCalled);
+        if (vulnerablePlayer) {
+            const drawn = this.drawCards(2);
+            vulnerablePlayer.hand.push(...drawn);
+            return { success: true, caughtName: vulnerablePlayer.name };
+        }
+        return { success: false, error: 'No one to catch!' };
     }
 
     getState(playerId) {
@@ -202,6 +241,7 @@ class Room {
             currentColor: this.currentColor,
             direction: this.direction,
             turnIndex: this.turnIndex,
+            drawStack: this.drawStack,
             winner: this.winner ? { id: this.winner.id, name: this.winner.name } : null,
             topCard: this.discardPile.length > 0 ? this.discardPile[this.discardPile.length - 1] : null,
             players: this.players.map((p, idx) => ({

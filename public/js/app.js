@@ -28,6 +28,8 @@ const playerHand = document.getElementById('player-hand');
 const turnText = document.getElementById('turn-text');
 const directionArrow = document.getElementById('direction-arrow');
 const btnUno = document.getElementById('btn-uno');
+const btnCatch = document.getElementById('btn-catch'); // New
+const stackIndicator = document.getElementById('stack-indicator'); // New
 
 // Modals
 const colorPickerModal = document.getElementById('color-picker-modal');
@@ -185,6 +187,14 @@ socket.on('game-update', (state) => {
     renderOpponents(state.players, state.turnIndex);
     renderCenter(state);
     renderHand(state.myHand, state);
+
+    if (state.drawStack > 0) {
+        stackIndicator.innerText = `+${state.drawStack}`;
+        stackIndicator.classList.remove('hidden');
+    } else {
+        stackIndicator.classList.add('hidden');
+    }
+
     if (isMyTurn) turnText.innerText = 'Your Turn!';
     else turnText.innerText = `${state.players[state.turnIndex].name}'s Turn`;
 

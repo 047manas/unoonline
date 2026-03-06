@@ -122,92 +122,114 @@ io.on('connection', (socket) => {
                 io.to(p.socketId).emit('game-update', room.getState(p.id));
             });
         }
+    }
     });
 
-    socket.on('call-uno', () => {
-        const user = socketToPlayerMap.get(socket.id);
-        if (!user) return;
-        const room = rooms.get(user.roomId);
-        if (!room) return;
+socket.on('call-uno', () => {
+    const user = socketToPlayerMap.get(socket.id);
+    if (!user) return;
+    const room = rooms.get(user.roomId);
+    if (!room) return;
 
-        const player = room.players.find(p => p.id === user.playerId);
-        if (player) {
-            if (player.hand.length <= 2) {
-                player.unoCalled = true;
-                io.to(user.roomId).emit('notification', { message: `${player.name} called UNO!` });
-                room.players.forEach(p => {
-                    io.to(p.socketId).emit('game-update', room.getState(p.id));
-                });
-            } else {
-                socket.emit('game-error', 'You can only call UNO when you have 2 or fewer cards!');
-            }
-        }
-    });
-
-    socket.on('reconnect-player', ({ playerId, roomId, name }, callback) => {
-        console.log(`[RECONNECT-ATTEMPT] Player: ${name}, Room: ${roomId}, ID: ${playerId}`);
-        const room = rooms.get(roomId);
-        if (!room) {
-            console.log(`[RECONNECT-FAILED] Room ${roomId} not found`);
-            return callback({ success: false, error: 'Room not found' });
-        }
-
-        const player = room.players.find(p => p.id === playerId);
-        if (!player) {
-            console.log(`[RECONNECT-FAILED] Player ${playerId} not found in room ${roomId}`);
-            return callback({ success: false, error: 'Player not found' });
-        }
-
-        // Update socket ID
-        player.socketId = socket.id;
-        socketToPlayerMap.set(socket.id, { roomId, playerId: player.id, name: player.name });
-        socket.join(roomId);
-
-        console.log(`[RECONNECT-SUCCESS] Player ${player.name} reconnected to Room ${roomId}`);
-        callback({ success: true });
-
-        // Send full state update
-        if (room.status === 'playing') {
-            socket.emit('game-update', room.getState(player.id));
+    const player = room.players.find(p => p.id === user.playerId);
+    if (player) {
+        if (player.hand.length <= 2) {
+            player.unoCalled = true;
+            io.to(user.roomId).emit('notification', { message: `${player.name} called UNO!` });
+            room.players.forEach(p => {
+                io.to(p.socketId).emit('game-update', room.getState(p.id));
+            });
         } else {
-            io.to(roomId).emit('room-update', room.getState(null));
+            socket.emit('game-error', 'You can only call UNO when you have 2 or fewer cards!');
         }
-    });
+    }
+});
 
-    socket.on('send-reaction', ({ emoji }) => {
-        const user = socketToPlayerMap.get(socket.id);
-        if (!user) return;
+socket.on('catch-uno', () => {
+    const user = socketToPlayerMap.get(socket.id);
+    if (!user) return;
+    const room = rooms.get(user.roomId);
+    if (!room) return;
 
-        // Broadcast the reaction to everyone in the room (including sender)
-        io.to(user.roomId).emit('show-reaction', {
-            playerId: user.playerId,
-            emoji
+    const result = room.catchUno(user.playerId);
+    if (result.success) {
+        io.to(user.roomId).emit('notification', { message: `${user.name} caught ${result.caughtName} forgetting UNO! +2 penalty cards.` });
+        room.players.forEach(p => {
+            io.to(p.socketId).emit('game-update', room.getState(p.id));
         });
-    });
+    } else {
+        socket.emit('game-error', result.error || 'No one to catch!');
+    }
+});
 
-    socket.on('disconnect', () => {
-        const user = socketToPlayerMap.get(socket.id);
-        if (user) {
-            const room = rooms.get(user.roomId);
-            if (room) {
-                const removedPlayer = room.removePlayer(socket.id);
-                if (removedPlayer) {
-                    io.to(user.roomId).emit('notification', { message: `${removedPlayer.name} disconnected.` });
-                    if (room.players.length === 0) {
-                        rooms.delete(user.roomId);
-                    } else {
-                        room.players.forEach(p => {
-                            io.to(p.socketId).emit('room-update', room.getState(p.id));
-                            if (room.status === 'playing') {
-                                io.to(p.socketId).emit('game-update', room.getState(p.id));
-                            }
-                        });
+socket.on('reconnect-player', ({ playerId, roomId, name }, callback) => {
+    console.log(`[RECONNECT-ATTEMPT] Player: ${name}, Room: ${roomId}, ID: ${playerId}`);
+    const room = rooms.get(roomId);
+    if (!room) {
+        console.log(`[RECONNECT-FAILED] Room ${roomId} not found`);
+        return callback({ success: false, error: 'Room not found' });
+    }
+
+    const player = room.players.find(p => p.id === playerId);
+    if (!player) {
+        console.log(`[RECONNECT-FAILED] Player ${playerId} not found in room ${roomId}`);
+        return callback({ success: false, error: 'Player not found' });
+    }
+
+    // Update socket ID
+    player.socketId = socket.id;
+    socketToPlayerMap.set(socket.id, { roomId, playerId: player.id, name: player.name });
+    socket.join(roomId);
+
+    console.log(`[RECONNECT-SUCCESS] Player ${player.name} reconnected to Room ${roomId}`);
+    callback({ success: true });
+
+    // Send full state update
+    if (room.status === 'playing') {
+        socket.emit('game-update', room.getState(player.id));
+    } else {
+        io.to(roomId).emit('room-update', room.getState(null));
+    }
+});
+
+socket.on('send-reaction', ({ emoji }) => {
+    const user = socketToPlayerMap.get(socket.id);
+    if (!user) return;
+
+    // Broadcast the reaction to everyone in the room (including sender)
+    io.to(user.roomId).emit('show-reaction', {
+        playerId: user.playerId,
+        emoji
+    });
+});
+
+socket.on('disconnect', () => {
+    const user = socketToPlayerMap.get(socket.id);
+    if (user) {
+        const room = rooms.get(user.roomId);
+        if (room) {
+            const removedPlayer = room.removePlayer(socket.id);
+            if (removedPlayer) {
+                io.to(user.roomId).emit('notification', { message: `${removedPlayer.name} disconnected.` });
+                if (room.players.length === 0) {
+                    rooms.delete(user.roomId);
+                } else {
+                    if (room.status === 'finished' && room.winner) {
+                        io.to(user.roomId).emit('game-over', { winner: room.winner.name });
                     }
+
+                    room.players.forEach(p => {
+                        io.to(p.socketId).emit('room-update', room.getState(p.id));
+                        if (room.status === 'playing' || room.status === 'finished') {
+                            io.to(p.socketId).emit('game-update', room.getState(p.id));
+                        }
+                    });
                 }
             }
-            socketToPlayerMap.delete(socket.id);
         }
-    });
+        socketToPlayerMap.delete(socket.id);
+    }
+});
 });
 
 const PORT = process.env.PORT || 3000;
