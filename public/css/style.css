@@ -27,13 +27,14 @@ body {
     background-color: var(--bg-dark);
     color: var(--text-main);
     min-height: 100vh;
-    height: 100%;
+    min-height: 100dvh;
+    height: 100dvh;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow: hidden;
     background-image: radial-gradient(circle at 50% -20%, #1e1b4b, var(--bg-dark) 60%);
     position: fixed;
-    width: 100%;
+    width: 100vw;
 }
 
 #app {
@@ -41,7 +42,7 @@ body {
     height: 100%;
     position: relative;
     max-width: 100vw;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 .screen {
@@ -231,8 +232,9 @@ input:focus {
 #game-screen.active {
     display: grid;
     grid-template-rows: auto 1fr auto;
-    height: 100%;
-    padding: 1rem 0;
+    height: 100dvh;
+    padding: 0.5rem 0;
+    overflow: hidden;
 }
 
 .opponents-container {
@@ -311,7 +313,7 @@ input:focus {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
 }
 
 .arrow {
@@ -336,7 +338,7 @@ input:focus {
 }
 
 .player-controls {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .hand-container {
@@ -639,63 +641,51 @@ input:focus {
 
 /* Mobile */
 @media (max-width: 768px) {
-    .logo {
-        font-size: 3rem;
-    }
-
-    .glass-panel {
-        padding: 1.5rem;
-        width: 90%;
-    }
-
-    .uno-card {
-        width: 80px;
-        height: 120px;
-        border-width: 3px;
-        margin-left: -45px !important;
-    }
-
-    .deck-container .uno-card {
-        margin: 0 !important;
-    }
-
-    .uno-card .ellipse {
-        width: 65px;
-        height: 95px;
-    }
-
-    .uno-card .center-val {
-        font-size: 2.25rem;
-    }
-
-    .uno-card .corner-val {
-        font-size: 1.1rem;
-    }
-
     .hand-container {
-        height: 140px;
+        height: 130px;
         padding: 0 0.5rem;
-        padding-bottom: 5px;
+        padding-bottom: 10px;
         width: 100%;
     }
 
+    .uno-card {
+        width: 65px;
+        height: 100px;
+        border-width: 2px;
+        margin-left: -35px !important;
+    }
+
+    .uno-card .ellipse {
+        width: 50px;
+        height: 80px;
+    }
+
     #discard-pile-container {
-        width: 80px;
-        height: 120px;
-    }
-
-    .deck-container {
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .turn-text {
-        font-size: 1.1rem;
+        width: 65px;
+        height: 100px;
     }
 
     .btn.danger {
-        padding: 0.5rem 1.5rem;
-        font-size: 1.1rem;
+        padding: 0.4rem 1.2rem;
+        font-size: 1rem;
+        border-radius: 12px;
+    }
+
+    .opponents-container {
+        gap: 0.5rem;
+    }
+
+    .opponent-box {
+        min-width: 70px;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .game-center {
+        justify-content: center;
+    }
+
+    .deck-container {
+        margin-bottom: 0.5rem;
     }
 }
 

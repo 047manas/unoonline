@@ -226,32 +226,6 @@ function renderCenter(state) {
     if (state.currentColor) {
         drawPile.style.boxShadow = `0 0 20px var(--uno-${state.currentColor})`;
     }
-
-    // Set up drop zone
-    discardPileContainer.addEventListener('dragover', (e) => {
-        e.preventDefault(); // Necessary to allow dropping
-        discardPileContainer.style.transform = 'scale(1.1)';
-    });
-
-    discardPileContainer.addEventListener('dragleave', () => {
-        discardPileContainer.style.transform = '';
-    });
-
-    discardPileContainer.addEventListener('drop', (e) => {
-        e.preventDefault();
-        discardPileContainer.style.transform = '';
-        const indexStr = e.dataTransfer.getData('text/plain');
-        if (indexStr !== '') {
-            const index = parseInt(indexStr);
-            const cardEl = document.querySelector(`.uno-card[data-index="${index}"]`);
-
-            // Re-use click logic for validation and visual feedback
-            const myPlayer = state.players.find(p => p.id === myId);
-            if (myPlayer && myPlayer.hand[index]) {
-                handleCardClick(myPlayer.hand[index], index, cardEl);
-            }
-        }
-    });
 }
 
 function renderHand(hand, state) {
@@ -261,10 +235,14 @@ function renderHand(hand, state) {
         // Determine if playable
         const topCard = state.topCard;
         let playable = false;
+
         if (isMyTurn && topCard) {
-            if (card.type === 'wild' || card.value === 'wildDraw4') playable = true;
-            else if (card.color === topCard.color || card.value === topCard.value) playable = true;
-            else if ((topCard.type === 'wild' || topCard.value === 'wildDraw4') && card.color === state.currentColor) playable = true;
+            // Match server-side validation exactly
+            if (card.type === 'wild' || card.value === 'wildDraw4') {
+                playable = true;
+            } else if (card.color === state.currentColor || card.value === topCard.value) {
+                playable = true;
+            }
         }
 
         const cardHtml = createCardHTML(card, index, playable, false);
@@ -273,25 +251,11 @@ function renderHand(hand, state) {
         const cardEl = tempDiv.firstChild;
 
         if (playable) {
-            // Click to play
             cardEl.addEventListener('click', () => handleCardClick(card, index, cardEl));
-
-            // Drag to play
-            cardEl.setAttribute('draggable', 'true');
-            cardEl.setAttribute('data-index', index);
-            cardEl.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', index.toString());
-                cardEl.style.opacity = '0.5';
-            });
-            cardEl.addEventListener('dragend', () => {
-                cardEl.style.opacity = '1';
-                // Reset drop zone style in case dragleave didn't fire
-                discardPileContainer.style.transform = '';
-            });
         } else {
             cardEl.addEventListener('click', () => {
                 if (isMyTurn) {
-                    showToast("Invalid move! You must match the color or value.");
+                    showToast(`Invalid move! Matches color ${state.currentColor} or value ${topCard.value}`);
                     playSound(200, 'square', 0.2);
                     cardEl.classList.add('shake');
                     setTimeout(() => cardEl.classList.remove('shake'), 400);
@@ -304,8 +268,6 @@ function renderHand(hand, state) {
 
         playerHand.appendChild(cardEl);
     });
-
-    // Spread cards manually a bit if needed, css handles margin-left
 }
 
 function handleCardClick(card, index, cardEl) {
